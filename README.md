@@ -53,40 +53,44 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import pandas as pd
-import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler
+import matplotlib.pyplot as plt
 
+# Load Dataset
+dataset1 = pd.read_csv('customers.csv')
 
-dataset = pd.read_csv('"C:\Users\admin\OneDrive\Documents\dl 1.xlsx"')
+# Numeric input: Age
+X = dataset1[['Age']].values
 
-X = dataset[['INPUT']].values
-y = dataset[['OUTPUT']].values
+# Numeric output: Spending_Score mapped to numbers
+spending_score_mapping = {'Low': 0, 'Average': 1, 'High': 2}
+y = dataset1['Spending_Score'].map(spending_score_mapping).values.reshape(-1, 1)
 
-
+# Train-Test Split
 X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=0.33, random_state=33
 )
 
-
+# Scaling
 scaler = MinMaxScaler()
 X_train = scaler.fit_transform(X_train)
 X_test = scaler.transform(X_test)
 
+# Convert to Tensors
 X_train_tensor = torch.tensor(X_train, dtype=torch.float32)
-y_train_tensor = torch.tensor(y_train, dtype=torch.float32).view(-1, 1)
-
+y_train_tensor = torch.tensor(y_train, dtype=torch.float32)
 X_test_tensor = torch.tensor(X_test, dtype=torch.float32)
-y_test_tensor = torch.tensor(y_test, dtype=torch.float32).view(-1, 1)
+y_test_tensor = torch.tensor(y_test, dtype=torch.float32)
 
+# Name: MAHALINGA JEYANTH V
+# Register Number: 212224220057
 class NeuralNet(nn.Module):
     def __init__(self):
         super().__init__()
-
         self.fc1 = nn.Linear(1, 8)
         self.fc2 = nn.Linear(8, 10)
         self.fc3 = nn.Linear(10, 1)
-
         self.relu = nn.ReLU()
         self.history = {'loss': []}
 
@@ -96,92 +100,69 @@ class NeuralNet(nn.Module):
         x = self.fc3(x)
         return x
 
-
+# Name: MAHALINGA JEYANTH V
+# Register Number: 212224220057
 ai_brain = NeuralNet()
 criterion = nn.MSELoss()
 optimizer = optim.RMSprop(ai_brain.parameters(), lr=0.001)
 
-
-
-def train_model(model, X_train, y_train, criterion, optimizer, epochs=2000):
-
+def train_model(ai_brain, X_train, y_train, criterion, optimizer, epochs=2000):
     for epoch in range(epochs):
         optimizer.zero_grad()
-
-        output = model(X_train)
-        loss = criterion(output, y_train)
-
+        loss = criterion(ai_brain(X_train), y_train)
         loss.backward()
         optimizer.step()
-
-        model.history['loss'].append(loss.item())
+        ai_brain.history['loss'].append(loss.item())
 
         if epoch % 200 == 0:
-            print(f"Epoch [{epoch}/{epochs}], Loss: {loss.item():.6f}")
-
-
+            print(f'Epoch [{epoch}/{epochs}], Loss: {loss.item():.6f}')
 
 train_model(ai_brain, X_train_tensor, y_train_tensor, criterion, optimizer)
 
-
-
 with torch.no_grad():
     test_loss = criterion(ai_brain(X_test_tensor), y_test_tensor)
-    print(f"Test Loss: {test_loss.item():.6f}")
+    print(f'Test Loss: {test_loss.item():.6f}')
 
-
-
+# Name: MAHALINGA JEYANTH V
+# Register Number: 212224220057
 loss_df = pd.DataFrame(ai_brain.history)
-
 loss_df.plot()
 plt.xlabel("Epochs")
 plt.ylabel("Loss")
-plt.title("Loss during Training")
+plt.title("Training Loss vs Iterations")
 plt.show()
 
+# New Sample Prediction
+print('Name: MAHALINGA JEYANTH V')
+print('Register Number: 212224220057')
 
-X_new = torch.tensor([[9]], dtype=torch.float32)
+X_new = torch.tensor([[30]], dtype=torch.float32)
+X_new_scaled = torch.tensor(scaler.transform(X_new), dtype=torch.float32)
 
-X_new_scaled = scaler.transform(X_new)
-X_new_tensor = torch.tensor(X_new_scaled, dtype=torch.float32)
+with torch.no_grad():
+    prediction = ai_brain(X_new_scaled).item()
 
-prediction = ai_brain(X_new_tensor).item()
+# Map back to label
+if prediction < 0.5:
+    label = 'Low'
+elif prediction < 1.5:
+    label = 'Average'
+else:
+    label = 'High'
 
-print(f"Prediction: {prediction}")
-```
-```python
-class NeuralNet(nn.Module):
-    def __init__(self):
-        super().__init__()
-
-        self.fc1 = nn.Linear(1, 8)
-        self.fc2 = nn.Linear(8, 10)
-        self.fc3 = nn.Linear(10, 1)
-
-        self.relu = nn.ReLU()
-
-    def forward(self, x):
-        x = self.relu(self.fc1(x))
-        x = self.relu(self.fc2(x))
-        x = self.fc3(x)
-        return x
-ai_brain = NeuralNet()
+print(f'Input Age: 30')
+print(f'Predicted Spending Score (numeric): {prediction:.2f}')
+print(f'Predicted Spending Score (label): {label}')
 ```
 ## Dataset Information
 
-<img width="349" height="561" alt="image" src="https://github.com/user-attachments/assets/a99d81e0-d825-4412-af87-acf6469a4823" />
+<img width="954" height="669" alt="image" src="https://github.com/user-attachments/assets/1cb1b3fe-aa46-4899-b50b-3572dadcd3e2" />
 
-## OUTPUT
-
-<img width="381" height="236" alt="Screenshot 2026-02-09 110506" src="https://github.com/user-attachments/assets/3dcee2bd-9f01-4a4d-99bd-9698055fbac0" />
-
-### Training Loss Vs Iteration Plot
-
-<img width="728" height="561" alt="Screenshot 2026-02-09 110520" src="https://github.com/user-attachments/assets/6e6cbe98-705e-4d47-a40d-03a4cbaa3387" />
 
 ### New Sample Data Prediction
 
-<img width="291" height="17" alt="Screenshot 2026-02-09 110530" src="https://github.com/user-attachments/assets/5a50f44f-d02a-40e2-b869-b653ab54e152" />
+<img width="955" height="700" alt="image" src="https://github.com/user-attachments/assets/d5dbb3bd-ac8d-4697-85d1-a490841783f4" />
+
 
 ## RESULT
 
